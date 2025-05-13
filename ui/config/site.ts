@@ -1,7 +1,7 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "CTO-Scanner",
+  name: "Prowler",
   description:
-    "Comprehensive security scanning, for your cloud environments.",
+    "The most comprehensive, free tool for AWS security. ProwlerPro is trusted by leading organizations to make cloud security effortless.",
 };

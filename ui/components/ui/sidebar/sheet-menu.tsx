@@ -1,7 +1,7 @@
 import { MenuIcon } from "lucide-react";
 import Link from "next/link";
 
-import { CTOIconExtended } from "@/components/icons";
+import { ProwlerExtended } from "@/components/icons";
 import {
   Sheet,
   SheetContent,
@@ -31,7 +31,7 @@ export function SheetMenu() {
             asChild
           >
             <Link href="/" className="flex items-center gap-2">
-              <CTOIconExtended />
+              <ProwlerExtended />
             </Link>
           </Button>
         </SheetHeader>

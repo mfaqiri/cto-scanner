@@ -41,15 +41,6 @@ WORKDIR /app
 # Set up environment for development
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
-
-ENV PROWLER_UI_VERSION="stable"
-ENV AUTH_URL=http://prowler-api:3000
-ENV API_BASE_URL=http://prowler-api:8080/api/v1
-ENV NEXT_PUBLIC_API_DOCS_URL=http://prowler-api:8080/api/v1/docs
-ENV AUTH_TRUST_HOST=true
-ENV UI_PORT=3000
-ENV AUTH_SECRET="N/c6mnaS5+SWq81+819OrzQZlmx1Vxtp/orjttJSmw8="
-
 COPY --from=builder /app /app
 
 # Run development server with hot-reloading
