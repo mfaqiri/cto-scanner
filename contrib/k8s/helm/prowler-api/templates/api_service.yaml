@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prowler-api-service
+  labels:
+    app: prowler-api
+    {{- include "prowler-api.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.ProwlerApi.service.type }}
+  ports:
+  - port: {{ .Values.ProwlerApi.service.port }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: prowler-api
+    

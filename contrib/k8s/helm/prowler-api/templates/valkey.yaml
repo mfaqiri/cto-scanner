@@ -1,0 +1,91 @@
+{{- if .Values.valkey.enabled }}
+# valkey Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkey
+  labels:
+    {{- include "prowler-api.labels" . | nindent 4 }}
+    app: valkey
+spec:
+  selector:
+    matchLabels:
+      app: valkey
+  template:
+    metadata:
+      labels:
+        app: valkey
+    spec:
+      nodeSelector:
+        {{- with .Values.valkey.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: valkey
+          image: "{{ .Values.valkey.image.repository }}:{{ .Values.valkey.image.tag }}"
+          ports:
+            - containerPort: 6379
+          env:
+            - name: VALKEY_HOST
+              value: "http://valkey:6379"
+            - name: VALKEY_PORT
+              value: "6379"
+            - name: VALKEY_DB
+              value: "0"
+          volumeMounts:
+            - name: valkey-data
+              mountPath: /data
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - valkey-cli ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - valkey-cli ping
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: valkey-data
+          persistentVolumeClaim:
+            claimName: valkey-data
+---
+# valkey Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey
+  labels:
+    {{- include "prowler-api.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: valkey
+  ports:
+    - port: 6379
+      targetPort: 6379
+---
+# PersistentVolumeClaim for valkey
+{{- if .Values.valkey.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: valkey-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.valkey.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.valkey.persistence.size }}
+{{- end }}
+{{- end }}

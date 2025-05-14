@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prowler-api
+  labels:
+    app: prowler-api
+    {{- include "prowler-api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.ProwlerApi.autoscaling.enabled }}
+  replicas: {{ .Values.ProwlerApi.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: prowler-api
+      {{- include "prowler-api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- with .Values.ProwlerApi.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: prowler-api
+        {{- include "prowler-api.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "prowler-api.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.ProwlerApi.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          securityContext:
+            {{- toYaml .Values.ProwlerApi.securityContext | nindent 12 }}
+          image: "{{ .Values.ProwlerApi.image.repository }}:{{ .Values.ProwlerApi.image.tag}}"
+          imagePullPolicy: {{ .Values.ProwlerApi.image.pullPolicy }}
+          envFrom:
+            - secretRef:
+                name: prowler-api-env
+          command:
+            {{- toYaml .Values.ProwlerApi.command | nindent 12 }}
+          {{- if .Values.ProwlerApi.ports }}
+          ports:
+            {{- toYaml .Values.ProwlerApi.ports | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.ProwlerApi.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.ProwlerApi.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.ProwlerApi.resources | nindent 12 }}
+      #     volumeMounts:
+      #       - name: {{ include "prowler-api.fullname" $ }}-config
+      #         mountPath: {{ $.Values.releaseConfigRoot }}{{ $.Values.releaseConfigPath }}
+      #         subPath: config.yaml
+      #     {{- with .volumeMounts }}
+      #       {{- toYaml . | nindent 12 }}
+      #     {{- end }}
+
+      # volumes:
+      #   - name: {{ include "prowler-api.fullname" . }}-config
+      #     configMap:
+      #       name: {{ include "prowler-api.fullname" . }}-config
+      # {{- with .Values.ProwlerApi.volumes }}
+      #   {{- toYaml . | nindent 8 }}
+      # {{- end }}
+      {{- with .Values.ProwlerApi.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ProwlerApi.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ProwlerApi.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
