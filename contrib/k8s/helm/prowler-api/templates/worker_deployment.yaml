@@ -1,60 +1,53 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "prowler-api.fullname" . }}
+  name: prowler-api-worker
   labels:
+    app: prowler-api-worker
     {{- include "prowler-api.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  {{- if not .Values.worker.autoscaling.enabled }}
+  replicas: {{ .Values.worker.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
+      app: prowler-api-worker
       {{- include "prowler-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
-        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.worker.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "prowler-api.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        app: prowler-api-worker
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       serviceAccountName: {{ include "prowler-api.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.worker.podSecurityContext | nindent 8 }}
       containers:
-      {{- range $name,$config := .Values.containers }}
-      {{- if $config.enabled }}
-        - name: {{ $name }}
+        - name: worker
           securityContext:
-            {{- toYaml $config.securityContext | nindent 12 }}
-          image: "{{ $config.image.repository }}:{{ $config.image.tag | default $.Chart.AppVersion }}"
-          imagePullPolicy: {{ $config.image.pullPolicy }}
+            {{- toYaml .Values.worker.securityContext | nindent 12 }}
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag}}"
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
           envFrom:
             - secretRef:
-                name: {{ include "prowler-api.fullname" $ }}
+                name: prowler-api-env
           command:
-            {{- toYaml $config.command | nindent 12 }}
-          {{- if $config.ports }}
+            {{- toYaml .Values.worker.command | nindent 12 }}
+          {{- if .Values.worker.ports }}
           ports:
-            {{- toYaml $config.ports | nindent 12 }}
+            {{- toYaml .Values.worker.ports | nindent 12 }}
           {{- end }}
           livenessProbe:
-            {{- toYaml $config.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.worker.livenessProbe | nindent 12 }}
           readinessProbe:
-            {{- toYaml $config.readinessProbe | nindent 12 }}
+            {{- toYaml .Values.worker.readinessProbe | nindent 12 }}
           resources:
-            {{- toYaml $config.resources | nindent 12 }}
+            {{- toYaml .Values.worker.resources | nindent 12 }}
           volumeMounts:
             - name: {{ include "prowler-api.fullname" $ }}-config
               mountPath: {{ $.Values.releaseConfigRoot }}{{ $.Values.releaseConfigPath }}
@@ -62,24 +55,23 @@ spec:
           {{- with .volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- end }}
-      {{- end }}
+
       volumes:
         - name: {{ include "prowler-api.fullname" . }}-config
           configMap:
             name: {{ include "prowler-api.fullname" . }}-config
-      {{- with .Values.volumes }}
+      {{- with .Values.worker.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.worker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.worker.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.worker.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
