@@ -64,7 +64,7 @@ export function Sidebar() {
                 "!mt-0": isOpen,
               })}
             >
-              <CTOIconExtended />
+              <CTOIconExtended width={240} />
             </div>
           </Link>
         </Button>

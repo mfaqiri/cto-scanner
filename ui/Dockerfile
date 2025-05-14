@@ -41,7 +41,6 @@ WORKDIR /app
 # Set up environment for development
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
-
 COPY --from=builder /app /app
 
 # Run development server with hot-reloading
