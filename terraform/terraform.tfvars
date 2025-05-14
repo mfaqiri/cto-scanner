@@ -1,0 +1,2 @@
+eks_oidc_provider = "oidc.eks.us-east-1.amazonaws.com/id/94F4957929BD24666C3008E1C389B3DE"
+eks_oidc_provider_arn = "arn:aws:iam::897729109735:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/94F4957929BD24666C3008E1C389B3DE"

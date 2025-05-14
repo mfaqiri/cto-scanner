@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prowler-api-worker-beat
+  labels:
+    app: prowler-api-worker-beat
+    {{- include "prowler-api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.workerBeat.autoscaling.enabled }}
+  replicas: {{ .Values.workerBeat.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: prowler-api-worker-beat
+      {{- include "prowler-api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      {{- with .Values.workerBeat.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "prowler-api.labels" . | nindent 8 }}
+        app: prowler-api-worker-beat
+    spec:
+      serviceAccountName: {{ include "prowler-api.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.workerBeat.podSecurityContext | nindent 8 }}
+      containers:
+        - name: worker-beat
+          {{- if .Values.workerBeat.extraContainers }}
+          {{- toYaml .Values.workerBeat.extraContainers | nindent 12 }}
+          {{- end }}
+          {{- if .Values.workerBeat.extraInitContainers }}
+          {{- toYaml .Values.workerBeat.extraInitContainers | nindent 12 }}
+          {{- end }}
+          {{- if .Values.workerBeat.extraVolumes }}
+          {{- toYaml .Values.workerBeat.extraVolumes | nindent 12 }}
+          {{- end }}
+          {{- if .Values.workerBeat.extraVolumeMounts }}
+          {{- toYaml .Values.workerBeat.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.workerBeat.securityContext | nindent 12 }}
+          image: "{{ .Values.workerBeat.image.repository }}:{{ .Values.workerBeat.image.tag}}"
+          imagePullPolicy: {{ .Values.workerBeat.image.pullPolicy }}
+          envFrom:
+            - secretRef:
+                name: prowler-api-env
+          command:
+            {{- toYaml .Values.workerBeat.command | nindent 12 }}
+          {{- if .Values.workerBeat.ports }}
+          ports:
+            {{- toYaml .Values.workerBeat.ports | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.workerBeat.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.workerBeat.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.workerBeat.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ include "prowler-api.fullname" $ }}-config
+              mountPath: {{ $.Values.releaseConfigRoot }}{{ $.Values.releaseConfigPath }}
+              subPath: config.yaml
+          {{- with .volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+      volumes:
+        - name: {{ include "prowler-api.fullname" . }}-config
+          configMap:
+            name: {{ include "prowler-api.fullname" . }}-config
+      {{- with .Values.workerBeat.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.workerBeat.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.workerBeat.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.workerBeat.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

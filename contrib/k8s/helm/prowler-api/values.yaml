@@ -1,74 +1,224 @@
 # Default values for prowler-api.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
+# External Secrets settings
+external-secrets:
+  enabled: true
+  install: false
+  # You can override external-secrets chart values here
+  installCRDs: true
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
-containers:
-  prowler-api:
-    enabled: true
-    image:
-      repository: prowlercloud/prowler-api
-      pullPolicy: IfNotPresent
-    ports:
-      - name: http
-        containerPort: 8080
-        protocol: TCP
-    command: ["/home/prowler/docker-entrypoint.sh", "prod"]
-  worker:
-    enabled: true
-    image:
-      repository: prowlercloud/prowler-api
-      pullPolicy: IfNotPresent
-    command: ["/home/prowler/docker-entrypoint.sh", "worker"]
-  worker-beat:
-    enabled: true
-    image:
-      repository: prowlercloud/prowler-api
-      pullPolicy: IfNotPresent
-    command: ["../docker-entrypoint.sh", "beat"]
+storageClass:
+  # This sets the storage class for the database more information can be found here: https://kubernetes.io/docs/concepts/storage/storage-classes/
+  create: true
+  name: ebs-sc-prowler
+  reclaimPolicy: Delete
 
-secrets:
-  POSTGRES_HOST:
-  POSTGRES_PORT: 5432
-  POSTGRES_ADMIN_USER:
-  POSTGRES_ADMIN_PASSWORD:
-  POSTGRES_USER:
-  POSTGRES_PASSWORD:
-  POSTGRES_DB:
-  # Valkey settings
-  VALKEY_HOST: valkey-headless
-  VALKEY_PORT: "6379"
-  VALKEY_DB: "0"
-  # Django settings
-  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,prowler-api
-  DJANGO_BIND_ADDRESS: 0.0.0.0
-  DJANGO_PORT: "8080"
-  DJANGO_DEBUG: False
-  DJANGO_SETTINGS_MODULE: config.django.production
-  # Select one of [ndjson|human_readable]
-  DJANGO_LOGGING_FORMATTER: human_readable
-  # Select one of [DEBUG|INFO|WARNING|ERROR|CRITICAL]
-  # Applies to both Django and Celery Workers
-  DJANGO_LOGGING_LEVEL: INFO
-  # Defaults to the maximum available based on CPU cores if not set.
-  DJANGO_WORKERS: 2
-  # Token lifetime is in minutes
-  DJANGO_ACCESS_TOKEN_LIFETIME: "30"
-  # Token lifetime is in minutes
-  DJANGO_REFRESH_TOKEN_LIFETIME: "1440"
-  DJANGO_CACHE_MAX_AGE: "3600"
-  DJANGO_STALE_WHILE_REVALIDATE: "60"
-  DJANGO_MANAGE_DB_PARTITIONS: "False"
-  # openssl genrsa -out private.pem 2048
-  DJANGO_TOKEN_SIGNING_KEY:
-  # openssl rsa -in private.pem -pubout -out public.pem
-  DJANGO_TOKEN_VERIFYING_KEY:
-  # openssl rand -base64 32
-  DJANGO_SECRETS_ENCRYPTION_KEY:
-  DJANGO_BROKER_VISIBILITY_TIMEOUT: 86400
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+ProwlerApi:
+  replicaCount: 1
+  enabled: true
+  image:
+    repository: prowlercloud/prowler-api
+    tag: stable
+    pullPolicy: IfNotPresent
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+  command: ["/home/prowler/docker-entrypoint.sh", "prod"]
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  service:
+    enabled: true
+    annotations: {}
+    type: ClusterIP
+    port: 8080
+
+env:
+  secretStoreRef:
+    name: secretstore-prowler
+  targetSecretName: prowler-api-env
+  remoteRef: prowler-api/env         # The key in AWS Secrets Manager
+  keys:
+    - POSTGRES_HOST
+    - POSTGRES_PORT
+    - POSTGRES_ADMIN_USER
+    - POSTGRES_ADMIN_PASSWORD
+    - POSTGRES_USER
+    - POSTGRES_PASSWORD
+    - POSTGRES_DB
+
+    # Valkey settings
+    - VALKEY_HOST
+    - VALKEY_PORT
+    - VALKEY_DB
+
+    # Django settings
+    - DJANGO_ALLOWED_HOSTS
+    - DJANGO_BIND_ADDRESS
+    - DJANGO_PORT
+    - DJANGO_DEBUG
+    - DJANGO_SETTINGS_MODULE
+
+    # Select one of [ndjson|human_readable]
+    - DJANGO_LOGGING_FORMATTER
+
+    # Select one of [DEBUG|INFO|WARNING|ERROR|CRITICAL]
+    # Applies to both Django and Celery Workers
+    - DJANGO_LOGGING_LEVEL
+
+    # Defaults to the maximum available based on CPU cores if not set.
+    - DJANGO_WORKERS
+
+    # Token lifetime is in minutes
+    - DJANGO_ACCESS_TOKEN_LIFETIME
+
+    # Token lifetime is in minutes
+    - DJANGO_REFRESH_TOKEN_LIFETIME
+
+    - DJANGO_CACHE_MAX_AGE
+    - DJANGO_STALE_WHILE_REVALIDATE
+    - DJANGO_MANAGE_DB_PARTITIONS
+
+    # openssl genrsa -out private.pem 2048
+    - DJANGO_TOKEN_SIGNING_KEY
+
+    # openssl rsa -in private.pem -pubout -out public.pem
+    - DJANGO_TOKEN_VERIFYING_KEY
+
+    # openssl rand -base64 32
+    - DJANGO_SECRETS_ENCRYPTION_KEY
+
+    - DJANGO_BROKER_VISIBILITY_TIMEOUT
+    - DJANGO_TMP_OUTPUT_DIRECTORY
+    - DJANGO_FINDINGS_BATCH_SIZE
+    - PROWLER_API_VERSION
+    - DJANGO_OUTPUT_S3_AWS_DEFAULT_REGION
+    - DJANGO_OUTPUT_S3_AWS_OUTPUT_BUCKET
+
+
+# Valkey configuration
+valkey:
+  enabled: true
+  image:
+    repository: valkey/valkey
+    tag: 8-alpine3.21
+  nodeSelector:
+    eks.amazonaws.com/capacityType: ON_DEMAND
+  persistence:
+    enabled: true
+    storageClass: ebs-sc-prowler
+    size: 10Gi
+
+# Secret Store configuration
+secretStore:
+  aws:
+    region: us-east-1
+
+
+worker:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: prowlercloud/prowler-api
+    tag: stable
+    pullPolicy: IfNotPresent
+  command: ["/home/prowler/docker-entrypoint.sh", "worker"]
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+workerBeat:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: prowlercloud/prowler-api
+    tag: stable
+    pullPolicy: IfNotPresent
+  command: ["../docker-entrypoint.sh", "beat"]
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+ui:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: prowlercloud/prowler-ui
+    tag: stable
+    pullPolicy: IfNotPresent
+  ports:
+    - name: http
+      containerPort: 3000
+      protocol: TCP
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  service:
+    enabled: true
+    annotations: {}
+    type: ClusterIP
+    port: 3000
+  env:
+    refreshInterval: 30m
+    secretStoreRef:
+      name: secretstore-prowler
+      kind: SecretStore
+    targetSecretName: prowler-ui-env
+    remoteRef: prowler-ui/env         # The key in AWS Secrets Manager
+    keys:
+      - PROWLER_UI_VERSION
+      - AUTH_URL
+      - API_BASE_URL
+      - NEXT_PUBLIC_API_DOCS_URL
+      - AUTH_TRUST_HOST
+      - UI_PORT
+      - AUTH_SECRET
+  # Ingress configuration
+  ingress:
+    enabled: true
+    className: aws-load-balancer-prowler
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/subnets: 'subnet-098a5953f1f289823, subnet-060141215e7e34932'
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS":443}]'
+      alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:897729109735:certificate/718b77c4-6dda-4d08-bdfb-e0b23e485c92
+      alb.ingress.kubernetes.io/group.name: "group"
+      alb.ingress.kubernetes.io/group.order: "1"
+    hosts:
+      - host: comp.ascendingdc.com
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: prowler-ui-service
+              port: 3000
 
 releaseConfigRoot: /home/prowler/.cache/pypoetry/virtualenvs/prowler-api-NnJNioq7-py3.12/lib/python3.12/site-packages/
 releaseConfigPath: prowler/config/config.yaml
@@ -514,12 +664,6 @@ mainConfig:
       ]
 
 
-# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
-# This is to override the chart name.
-nameOverride: ""
-fullnameOverride: ""
-
 #This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
   # Specifies whether a service account should be created
@@ -527,10 +671,11 @@ serviceAccount:
   # Automatically mount a ServiceAccount's API credentials?
   automount: true
   # Annotations to add to the service account
-  annotations: {}
+  annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::897729109735:role/prowler-api-role"
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: "prowler-api-sa"
 
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -549,76 +694,3 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
-# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
-service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
-
-# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
-
-#This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
