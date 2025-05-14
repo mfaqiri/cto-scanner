@@ -13,7 +13,6 @@ export const CTOIconExtended: React.FC<ImageProps> = ({
                 {
                  `img {
                         max-width: 200%;
-
                 }`
                 }
             </style>
