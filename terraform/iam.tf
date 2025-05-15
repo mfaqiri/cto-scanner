@@ -8,7 +8,7 @@ data "aws_region" "current" {
 
 
 resource "aws_iam_role" "prowler_role" {
-  name = "prowler-api-role"
+  name = "cto-scanner-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -80,8 +80,8 @@ resource "aws_iam_policy" "prowler_api_policy" {
                         "s3:*"
                     ],
                     "Resource": [
-                        "arn:aws:s3:::ascending-jarvis-bucket",
-                        "arn:aws:s3:::ascending-jarvis-bucket/*"
+                        "arn:aws:s3:::ascending-jarvis-cto-scanner",
+                        "arn:aws:s3:::ascending-jarvis-cto-scanner/*"
                     ]
                 },
                 {
