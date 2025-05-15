@@ -102,6 +102,9 @@ env:
     - PROWLER_API_VERSION
     - DJANGO_OUTPUT_S3_AWS_DEFAULT_REGION
     - DJANGO_OUTPUT_S3_AWS_OUTPUT_BUCKET
+    - SOCIAL_GOOGLE_OAUTH_CALLBACK_URL
+    - SOCIAL_GOOGLE_OAUTH_CLIENT_ID
+    - SOCIAL_GOOGLE_OAUTH_CLIENT_SECRET
 
 
 # Valkey configuration
@@ -198,6 +201,9 @@ ui:
       - AUTH_TRUST_HOST
       - UI_PORT
       - AUTH_SECRET
+      - SOCIAL_GOOGLE_OAUTH_CLIENT_ID
+      - SOCIAL_GOOGLE_OAUTH_CLIENT_SECRET
+      - SOCIAL_GOOGLE_OAUTH_CALLBACK_URL
   # Ingress configuration
   ingress:
     enabled: true
@@ -672,7 +678,7 @@ serviceAccount:
   automount: true
   # Annotations to add to the service account
   annotations:
-      eks.amazonaws.com/role-arn: "arn:aws:iam::897729109735:role/prowler-api-role"
+      eks.amazonaws.com/role-arn: "arn:aws:iam::897729109735:role/cto-scanner-role"
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: "prowler-api-sa"
