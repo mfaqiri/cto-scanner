@@ -51,7 +51,6 @@ export function Sidebar() {
             <div
               className={clsx(
             "-translate-x-4",
-
             {
                 hidden: isOpen,
               })}
