@@ -34,7 +34,7 @@ spec:
           imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
           envFrom:
             - secretRef:
-                name: prowler-ui-env
+                name: prowler-api-env                  # use the same env secret as prowler-api
           command:
             {{- toYaml .Values.ui.command | nindent 12 }}
           {{- if .Values.ui.ports }}

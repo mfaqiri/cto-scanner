@@ -105,6 +105,13 @@ env:
     - SOCIAL_GOOGLE_OAUTH_CALLBACK_URL
     - SOCIAL_GOOGLE_OAUTH_CLIENT_ID
     - SOCIAL_GOOGLE_OAUTH_CLIENT_SECRET
+    - PROWLER_UI_VERSION
+    - AUTH_URL
+    - API_BASE_URL
+    - NEXT_PUBLIC_API_DOCS_URL
+    - AUTH_TRUST_HOST
+    - UI_PORT
+    - AUTH_SECRET
 
 
 # Valkey configuration
@@ -186,24 +193,7 @@ ui:
     annotations: {}
     type: ClusterIP
     port: 3000
-  env:
-    refreshInterval: 30m
-    secretStoreRef:
-      name: secretstore-prowler
-      kind: SecretStore
-    targetSecretName: prowler-ui-env
-    remoteRef: prowler-ui/env         # The key in AWS Secrets Manager
-    keys:
-      - PROWLER_UI_VERSION
-      - AUTH_URL
-      - API_BASE_URL
-      - NEXT_PUBLIC_API_DOCS_URL
-      - AUTH_TRUST_HOST
-      - UI_PORT
-      - AUTH_SECRET
-      - SOCIAL_GOOGLE_OAUTH_CLIENT_ID
-      - SOCIAL_GOOGLE_OAUTH_CLIENT_SECRET
-      - SOCIAL_GOOGLE_OAUTH_CALLBACK_URL
+
   # Ingress configuration
   ingress:
     enabled: true
@@ -218,6 +208,13 @@ ui:
       alb.ingress.kubernetes.io/group.name: "group"
       alb.ingress.kubernetes.io/group.order: "1"
     hosts:
+      - host: comp.ascendingdc.com
+        paths:
+          - path: /api/v1
+            pathType: Prefix
+            backend:
+              service: prowler-api-service
+              port: 8080
       - host: comp.ascendingdc.com
         paths:
           - path: /
