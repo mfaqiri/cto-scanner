@@ -69,8 +69,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64
-          context: .
-          file: ./ui/Dockerfile
+          context: ./ui
+          file: ./Dockerfile
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/prowler-ui-image:${{ github.sha }}
