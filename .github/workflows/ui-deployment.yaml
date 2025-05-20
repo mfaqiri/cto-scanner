@@ -70,7 +70,7 @@ jobs:
         with:
           platforms: linux/amd64
           context: ./ui
-          file: ./Dockerfile
+          file: ./ui/Dockerfile
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/prowler-ui-image:${{ github.sha }}
