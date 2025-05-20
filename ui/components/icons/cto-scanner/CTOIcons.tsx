@@ -12,7 +12,7 @@ export const CTOIconExtended: React.FC<ImageProps> = ({ width }) => {
                         max-width: 200%;
                 }`}
       </style>
-      <img src={logo3x.src} width={width} alt="Large CTO logo." />
+      <img src={(logo3x as HTMLImageElement).src} width={width} alt="Large CTO logo." />
     </div>
   );
 };
@@ -25,7 +25,7 @@ export const CTOIconShort: React.FC<ImageProps> = ({ width }) => {
                         max-width: 150%;
                 }`}
       </style>
-      <img src={logosmall.src} width={width} alt="Small CTO logo." />
+      <img src={(logosmall as HTMLImageElement).src} width={width} alt="Small CTO logo." />
     </div>
   );
 };
