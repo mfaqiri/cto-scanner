@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { authenticate, createNewUser } from "@/actions/auth";
-import { NotificationIcon, CTOIconExtended } from "@/components/icons";
+import { CTOIconExtended, NotificationIcon } from "@/components/icons";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { useToast } from "@/components/ui";
 import { CustomButton, CustomInput } from "@/components/ui/custom";

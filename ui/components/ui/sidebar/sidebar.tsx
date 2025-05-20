@@ -49,13 +49,11 @@ export function Sidebar() {
             )}
           >
             <div
-              className={clsx(
-            "-translate-x-4",
-            {
+              className={clsx("-translate-x-4", {
                 hidden: isOpen,
               })}
             >
-              <CTOIconShort  width={100} />
+              <CTOIconShort width={100} />
             </div>
             <div
               className={clsx({
