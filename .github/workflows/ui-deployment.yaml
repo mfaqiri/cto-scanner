@@ -1,16 +1,16 @@
 name: Prowler-ui Deployment Pipeline
 on:
   workflow_dispatch:
-      region:
-        description: 'AWS Region to deploy to'
-        type: string
-        required: true
-        default: us-east-1
-      redeploy_prowler_helm:
-        description: 'Redeploy prowler helm chart'
-        type: boolean
-        required: false
-        default: false
+    region:
+      description: 'AWS Region to deploy to'
+      type: string
+      required: true
+      default: us-east-1
+    redeploy_prowler_helm:
+      description: 'Redeploy prowler helm chart'
+      type: boolean
+      required: false
+      default: false
 
 permissions:
   id-token: write 
