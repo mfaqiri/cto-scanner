@@ -1,0 +1,154 @@
+name: Prowler-ui Deployment Pipeline
+on:
+  workflow_dispatch:
+      region:
+        description: 'AWS Region to deploy to'
+        type: string
+        required: true
+        default: us-east-1
+      redeploy_prowler_helm:
+        description: 'Redeploy prowler helm chart'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  id-token: write 
+  contents: read
+jobs:
+  build_and_test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      
+      - name: Set IAM role to assume
+        id: set-role
+        run: echo "role=${{ secrets.SAAS_AWS_DEPLOY_ROLE_ARN }}" >> $GITHUB_OUTPUT
+
+      - name: Assume IAM role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.set-role.outputs.role }}
+          role-session-name: deployment-role-session
+          aws-region: ${{ inputs.region }}
+      
+      - name: Test AWS Connection
+        run: aws sts get-caller-identity
+
+  package_and_push:
+    name: Package and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: build_and_test
+    outputs:
+      ecr_repo: ${{ steps.login-ecr.outputs.registry }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set IAM role to assume
+        id: set-role
+        run: echo "role=${{ secrets.SAAS_AWS_DEPLOY_ROLE_ARN }}" >> $GITHUB_OUTPUT
+
+      - name: Assume IAM role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.set-role.outputs.role }}
+          role-session-name: deployment-role-session
+          aws-region: ${{ inputs.region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push prowler-ui image
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64
+          context: .
+          file: ./ui/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/prowler-ui-image:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/prowler-ui-image:latest
+          provenance: false
+            
+  deploy-backend:
+    name: Deploy Backend to EKS
+    runs-on: ubuntu-latest
+    needs: package_and_push
+    env:
+      EKS_CLUSTER_NAME: ascending-s-api-cluster
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: latest
+
+      - name: Set IAM role to assume
+        id: set-role
+        run: echo "role=${{ secrets.SAAS_AWS_DEPLOY_ROLE_ARN }}" >> $GITHUB_OUTPUT
+  
+      - name: Assume IAM role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.set-role.outputs.role }}
+          role-session-name: deployment-role-session
+          aws-region: ${{ inputs.region }}
+      
+      - name: AWS ECR HELM Connection
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registries: "897729109735"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ inputs.region }}
+
+
+      - name: Redeploy prowler helm chart 
+        if: ${{ inputs.redeploy_prowler_helm == true }}
+        run: |
+          echo "Redeploying config for Prowler using helm..."
+          helm upgrade prowler oci://${{ steps.login-ecr.outputs.registry }}/prowler-api \
+            --namespace prowler \
+            -f terraform/prowler.yaml
+
+            
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      
+      - name: Install Python dependencies
+        run: |
+          pip install boto3 PyYAML
+
+
+      - name: Update ui images on EKS
+        env:
+          prowler_ui_image: ${{ needs.package_and_push.outputs.ecr_repo }}/prowler-ui-image:${{ github.sha }}
+        run: kubectl set image deploy/prowler-ui prowler-ui=$prowler_ui_image -n prowler
+
+
+      - name: restart pods
+        run: |
+          kubectl rollout restart deploy/prowler-ui -n prowler
+
+      - name: Check pod status
+        run: |
+          kubectl rollout status deploy/prowler-ui -n prowler

@@ -50,8 +50,7 @@ resource "aws_iam_policy" "prowler_api_policy" {
                         "secretsmanager:*"
                     ],
                     "Resource": [
-                        "${aws_secretsmanager_secret.prowler_secret.id}",
-                        "${aws_secretsmanager_secret.prowler_ui_secret.id}"
+                        "${aws_secretsmanager_secret.prowler_secret.id}"
                     ]
                 },
                 {

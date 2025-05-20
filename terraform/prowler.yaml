@@ -175,8 +175,8 @@ ui:
   enabled: true
   replicaCount: 1
   image:
-    repository: prowlercloud/prowler-ui
-    tag: stable
+    repository: 897729109735.dkr.ecr.us-east-1.amazonaws.com/prowler-ui-image
+    tag: latest
     pullPolicy: IfNotPresent
   ports:
     - name: http

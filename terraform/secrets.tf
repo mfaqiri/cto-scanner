@@ -38,7 +38,16 @@ locals {
     "DJANGO_TOKEN_VERIFYING_KEY" ,
     # openssl rand -base64 32
     "DJANGO_SECRETS_ENCRYPTION_KEY" ,
-    "DJANGO_BROKER_VISIBILITY_TIMEOUT" 
+    "DJANGO_BROKER_VISIBILITY_TIMEOUT",
+    "PROWLER_UI_VERSION",
+    "AUTH_URL",
+    "API_BASE_URL",
+    "NEXT_PUBLIC_API_DOCS_URL",
+    "AUTH_TRUST_HOST",
+    "UI_PORT",
+    # openssl rand -base64 32
+    "AUTH_SECRET"
+  
   ]
   prowler_ui_env_variables = [
     "PROWLER_UI_VERSION",
@@ -60,20 +69,6 @@ resource "aws_secretsmanager_secret_version" "prowler_secret_version" {
   secret_id = aws_secretsmanager_secret.prowler_secret.id
   secret_string = jsonencode({
     for key in local.prowler_api_env_variables : key => ""
-  })
-  lifecycle {
-    ignore_changes = [secret_string]
-  }
-}
-
-resource "aws_secretsmanager_secret" "prowler_ui_secret" {
-  name = "prowler-ui/env"
-}
-
-resource "aws_secretsmanager_secret_version" "prowler_ui_secret_version" {
-  secret_id = aws_secretsmanager_secret.prowler_ui_secret.id
-  secret_string = jsonencode({
-    for key in local.prowler_ui_env_variables : key => ""
   })
   lifecycle {
     ignore_changes = [secret_string]
