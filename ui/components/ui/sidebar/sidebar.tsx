@@ -3,8 +3,8 @@
 import clsx from "clsx";
 import Link from "next/link";
 
-import { ProwlerShort } from "@/components/icons";
-import { ProwlerExtended } from "@/components/icons";
+import { CTOIconShort } from "@/components/icons";
+import { CTOIconExtended } from "@/components/icons";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ export function Sidebar() {
       <div
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
-        className="no-scrollbar relative flex h-full flex-col overflow-y-auto overflow-x-hidden px-3 py-4 shadow-md dark:shadow-primary"
+        className="no-scrollbar relative flex h-full flex-col overflow-y-auto overflow-x-hidden p-1 shadow-md dark:shadow-primary"
       >
         <Button
           className={cn(
@@ -42,7 +42,7 @@ export function Sidebar() {
           <Link
             href="/"
             className={clsx(
-              "mb-6 flex w-full flex-col items-center justify-center px-3",
+              "mb-4 flex w-full flex-col items-center justify-center",
               {
                 "gap-0": !isOpen,
               },
@@ -53,7 +53,7 @@ export function Sidebar() {
                 hidden: isOpen,
               })}
             >
-              <ProwlerShort />
+              <CTOIconShort />
             </div>
             <div
               className={clsx({
@@ -61,7 +61,7 @@ export function Sidebar() {
                 "!mt-0": isOpen,
               })}
             >
-              <ProwlerExtended />
+              <CTOIconExtended />
             </div>
           </Link>
         </Button>
