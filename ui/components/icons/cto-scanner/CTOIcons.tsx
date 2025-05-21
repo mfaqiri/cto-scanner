@@ -5,7 +5,7 @@ import Image from "next/image";
 
 import { ctosmallogo, ctoextendedlogo } from "../compliance/IconCompliance";
 
-export const CTOIconExtended: React.FC<ImageProps> = ({ width }) => {
+export const CTOIconExtended: React.FC<ImageProps> = () => {
   return (
       <Image
         src={ctoextendedlogo()}
@@ -14,7 +14,7 @@ export const CTOIconExtended: React.FC<ImageProps> = ({ width }) => {
   );
 };
 
-export const CTOIconShort: React.FC<ImageProps> = ({ width }) => {
+export const CTOIconShort: React.FC<ImageProps> = () => {
   return (
       <Image
         src={ctosmallogo()}
