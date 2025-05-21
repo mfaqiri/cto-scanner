@@ -8,13 +8,13 @@ import GDPRLogo from "./gdpr.svg";
 import GxPLogo from "./gxp-aws.svg";
 import HIPAALogo from "./hipaa.svg";
 import ISOLogo from "./iso-27001.svg";
+import CTOExtendedLogo from "./logo-3x.webp";
+import CTOSmallLogo from "./logo-small.png";
 import MITRELogo from "./mitre-attack.svg";
 import NISTLogo from "./nist.svg";
 import PCILogo from "./pci-dss.svg";
 import RBILogo from "./rbi.svg";
 import SOC2Logo from "./soc2.svg";
-import CTOExtendedLogo from "./logo-3x.webp";
-import CTOSmallLogo from "./logo-small.png";
 
 export const ctoextendedlogo = () => CTOExtendedLogo;
 export const ctosmallogo = () => CTOSmallLogo;
