@@ -13,6 +13,11 @@ import NISTLogo from "./nist.svg";
 import PCILogo from "./pci-dss.svg";
 import RBILogo from "./rbi.svg";
 import SOC2Logo from "./soc2.svg";
+import CTOExtendedLogo from "./logo-3x.webp";
+import CTOSmallLogo from "./logo-small.png";
+
+export const ctoextendedlogo = () => CTOExtendedLogo;
+export const ctosmallogo = () => CTOSmallLogo;
 
 export const getComplianceIcon = (complianceTitle: string) => {
   if (complianceTitle.toLowerCase().includes("aws")) {

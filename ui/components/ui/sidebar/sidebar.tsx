@@ -29,7 +29,7 @@ export function Sidebar() {
       <div
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
-        className="no-scrollbar relative flex h-full flex-col overflow-y-auto overflow-x-hidden px-3 py-4 shadow-md dark:shadow-primary"
+        className="no-scrollbar relative flex h-full flex-col overflow-y-auto overflow-x-hidden p-1 shadow-md dark:shadow-primary"
       >
         <Button
           className={cn(
@@ -42,18 +42,18 @@ export function Sidebar() {
           <Link
             href="/"
             className={clsx(
-              "mb-6 flex w-full flex-col items-center justify-center",
+              "mb-4 flex w-full flex-col items-center justify-center",
               {
                 "gap-0": !isOpen,
               },
             )}
           >
             <div
-              className={clsx("-translate-x-4", {
+              className={clsx({
                 hidden: isOpen,
               })}
             >
-              <CTOIconShort width={100} />
+              <CTOIconShort />
             </div>
             <div
               className={clsx({
