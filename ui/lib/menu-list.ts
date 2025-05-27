@@ -177,7 +177,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
               icon: APIdocIcon,
             },
             {
-              href: "https://ascendingdc.com/about/contact-us?m=Inquiry:%20CTO-Scanner%20Support&p=https://comp.ascendingdc.com",
+              href: "https://ascendingdc.com/about/contact-us?m=Inquiry:%20CTO-Scanner%20Support&p=https%3A%2F%2Fcomp.ascendingdc.com",
               target: "_blank",
               label: "Support",
               icon: CircleHelpIcon,
