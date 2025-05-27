@@ -162,7 +162,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
           icon: SupportIcon,
           submenus: [
             {
-              href: "https://ascending.atlassian.net/wiki/spaces/ASC/pages/771555329/Prowler+API+Usage",
+              href: "https://comp.ascendingdc.com/api/v1/docs",
               target: "_blank",
               label: "Documentation",
               icon: DocIcon,
@@ -177,7 +177,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
               icon: APIdocIcon,
             },
             {
-              href: "https://github.com/ascending-llc/cto-scanner/issues",
+              href: "https://ascendingdc.com/about/contact-us?m=Inquiry:%20CTO-Scanner%20Support&p=https://comp.ascendingdc.com",
               target: "_blank",
               label: "Support",
               icon: CircleHelpIcon,
