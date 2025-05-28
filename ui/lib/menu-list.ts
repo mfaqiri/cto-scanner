@@ -162,7 +162,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
           icon: SupportIcon,
           submenus: [
             {
-              href: "https://docs.prowler.com/",
+              href: "https://comp.ascendingdc.com/api/v1/docs",
               target: "_blank",
               label: "Documentation",
               icon: DocIcon,
@@ -170,14 +170,14 @@ export const getMenuList = (pathname: string): GroupProps[] => {
             {
               href:
                 process.env.NEXT_PUBLIC_IS_CLOUD_ENV === "true"
-                  ? "https://api.prowler.com/api/v1/docs"
+                  ? "https://comp.ascendingdc.com/api/v1/docs"
                   : `${process.env.NEXT_PUBLIC_API_DOCS_URL}`,
               target: "_blank",
               label: "API reference",
               icon: APIdocIcon,
             },
             {
-              href: "https://github.com/prowler-cloud/prowler/issues",
+              href: "https://ascendingdc.com/about/contact-us?m=Inquiry:%20CTO-Scanner%20Support&p=/cto-scanner",
               target: "_blank",
               label: "Support",
               icon: CircleHelpIcon,
