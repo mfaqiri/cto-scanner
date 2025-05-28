@@ -174,7 +174,7 @@ export const Menu = ({ isOpen }: { isOpen: boolean }) => {
           <>
             <Divider orientation="vertical" />
             <Link
-              href="https://status.prowler.com"
+              href="https://comp.ascendingdc.com/api/v1/docs"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1"
