@@ -112,6 +112,7 @@ env:
     - AUTH_TRUST_HOST
     - UI_PORT
     - AUTH_SECRET
+    - NEXT_PUBLIC_IS_CLOUD_ENV
 
 
 # Valkey configuration
@@ -175,8 +176,8 @@ ui:
   enabled: true
   replicaCount: 1
   image:
-    repository: 897729109735.dkr.ecr.us-east-1.amazonaws.com/prowler-ui-image
-    tag: latest
+    repository: prowlercloud/prowler-ui
+    tag: stable
     pullPolicy: IfNotPresent
   ports:
     - name: http
