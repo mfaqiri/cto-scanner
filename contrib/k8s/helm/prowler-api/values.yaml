@@ -112,6 +112,7 @@ env:
     - AUTH_TRUST_HOST
     - UI_PORT
     - AUTH_SECRET
+    - NEXT_PUBLIC_IS_CLOUD_ENV
 
 
 # Valkey configuration
@@ -151,6 +152,13 @@ worker:
     maxReplicas: 10
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
 
 workerBeat:
   enabled: true
