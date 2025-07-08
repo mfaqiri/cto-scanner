@@ -19,7 +19,7 @@ services:
       - "prod"
 
   ui:
-    image: prowlercloud/prowler-ui:${PROWLER_UI_VERSION:-stable}
+    image: 897729109735.dkr.ecr.us-east-1.amazonaws.com/prowler-ui-image:${PROWLER_UI_VERSION:-latest}
     env_file:
       - path: .env
         required: false
