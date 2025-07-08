@@ -157,7 +157,7 @@ worker:
       memory: "256Mi"
       cpu: "250m"
     limits:
-      memory: "512Mi"
+      memory: "4Gi"
       cpu: "500m"
 
 workerBeat:
@@ -183,7 +183,7 @@ ui:
   enabled: true
   replicaCount: 1
   image:
-    repository: prowlercloud/prowler-ui
+    repository: 897729109735.dkr.ecr.us-east-1.amazonaws.com/prowler-ui-image
     tag: stable
     pullPolicy: IfNotPresent
   ports:
