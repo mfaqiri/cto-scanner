@@ -1,9 +1,9 @@
+/*
 import Link from "next/link";
 
 import { getProviderName } from "@/components/ui/entities/get-provider-logo";
 import { ProviderType } from "@/components/ui/entities/get-provider-logo";
 import { getProviderLogo } from "@/components/ui/entities/get-provider-logo";
-
 export const ProviderTitleDocs = ({
   providerType,
 }: {
@@ -67,7 +67,7 @@ export const ProviderTitleDocs = ({
           Read the docs
         </Link>
       </div>
-            */}
+            }
     </div>
   );
-};
+};*/
