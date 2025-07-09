@@ -47,7 +47,7 @@ export const ProviderTitleDocs = ({
   return (
     <div className="flex flex-col gap-y-2">
       <div className="flex space-x-4">
-        {providerType && getProviderLogo(providerType as ProviderType)}
+        {/*providerType && getProviderLogo(providerType as ProviderType)*/}
         <span className="text-lg font-semibold">
           {providerType
             ? getProviderName(providerType as ProviderType)
