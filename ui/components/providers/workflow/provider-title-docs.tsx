@@ -47,13 +47,14 @@ export const ProviderTitleDocs = ({
   return (
     <div className="flex flex-col gap-y-2">
       <div className="flex space-x-4">
-        {/*providerType && getProviderLogo(providerType as ProviderType)*/}
+        {providerType && getProviderLogo(providerType as ProviderType)}
         <span className="text-lg font-semibold">
           {providerType
             ? getProviderName(providerType as ProviderType)
             : "Unknown Provider"}
         </span>
       </div>
+            {/*
       <div className="flex items-end gap-x-2">
         <p className="text-sm text-default-500">
           {getProviderHelpText(providerType as string).text}
@@ -66,6 +67,7 @@ export const ProviderTitleDocs = ({
           Read the docs
         </Link>
       </div>
+            */}
     </div>
   );
 };
