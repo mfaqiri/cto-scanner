@@ -10,7 +10,7 @@ import * as z from "zod";
 import { updateCredentialsProvider } from "@/actions/providers/providers";
 import { useToast } from "@/components/ui";
 import { CustomButton } from "@/components/ui/custom";
-import { ProviderType } from "@/components/ui/entities";
+//import { ProviderType } from "@/components/ui/entities";
 import { Form } from "@/components/ui/form";
 import {
   addCredentialsFormSchema,
@@ -22,7 +22,7 @@ import {
   M365Credentials,
 } from "@/types";
 
-import { ProviderTitleDocs } from "../provider-title-docs";
+//import { ProviderTitleDocs } from "../provider-title-docs";
 import { AWScredentialsForm } from "./via-credentials/aws-credentials-form";
 import { AzureCredentialsForm } from "./via-credentials/azure-credentials-form";
 import { GCPcredentialsForm } from "./via-credentials/gcp-credentials-form";
@@ -201,7 +201,7 @@ export const UpdateViaCredentialsForm = ({
         <input type="hidden" name="providerId" value={providerId} />
         <input type="hidden" name="providerType" value={providerType} />
 
-        <ProviderTitleDocs providerType={providerType as ProviderType} />
+        {/*<ProviderTitleDocs providerType={providerType as ProviderType} />*/}
 
         <Divider />
 

@@ -1,9 +1,9 @@
+/*
 import Link from "next/link";
 
 import { getProviderName } from "@/components/ui/entities/get-provider-logo";
 import { ProviderType } from "@/components/ui/entities/get-provider-logo";
 import { getProviderLogo } from "@/components/ui/entities/get-provider-logo";
-
 export const ProviderTitleDocs = ({
   providerType,
 }: {
@@ -54,6 +54,7 @@ export const ProviderTitleDocs = ({
             : "Unknown Provider"}
         </span>
       </div>
+            {/*
       <div className="flex items-end gap-x-2">
         <p className="text-sm text-default-500">
           {getProviderHelpText(providerType as string).text}
@@ -66,6 +67,7 @@ export const ProviderTitleDocs = ({
           Read the docs
         </Link>
       </div>
+            }
     </div>
   );
-};
+};*/

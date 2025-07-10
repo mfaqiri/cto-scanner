@@ -16,19 +16,19 @@ export const CredentialsRoleHelper = () => {
         </p>
         <div className="flex w-fit flex-col gap-2">
           <Link
-            href="https://github.com/prowler-cloud/prowler/blob/master/permissions/templates/cloudformation/prowler-scan-role.yml"
+            href="https://github.com/ascending-llc/Operation/blob/master/cross-account-template/askcto-scanner-role.yml"
             target="_blank"
             className="text-sm font-medium text-blue-500 hover:underline"
           >
             CloudFormation Template
           </Link>
-          <Link
+          {/* <Link
             href="https://github.com/prowler-cloud/prowler/blob/master/permissions/templates/terraform/main.tf"
             target="_blank"
             className="text-sm font-medium text-blue-500 hover:underline"
           >
             Terraform Code
-          </Link>
+          </Link> */}
         </div>
         <p className="text-xs font-bold text-gray-600 dark:text-gray-400">
           The External ID will also be required:
