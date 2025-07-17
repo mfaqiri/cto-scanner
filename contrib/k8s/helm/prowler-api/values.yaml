@@ -184,7 +184,7 @@ ui:
   replicaCount: 1
   image:
     repository: 897729109735.dkr.ecr.us-east-1.amazonaws.com/prowler-ui-image
-    tag: stable
+    tag: latest
     pullPolicy: IfNotPresent
   ports:
     - name: http
