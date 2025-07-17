@@ -1,11 +1,14 @@
 from datetime import datetime, timezone
 
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models import Subquery
 from rest_framework.exceptions import NotFound, ValidationError
 
 from api.db_router import MainRouter
 from api.exceptions import InvitationTokenExpiredException
-from api.models import Invitation, Provider
+from api.models import Invitation, Processor, Provider, Resource
+from api.v1.serializers import FindingMetadataSerializer
 from prowler.providers.aws.aws_provider import AwsProvider
 from prowler.providers.azure.azure_provider import AzureProvider
 from prowler.providers.common.models import Connection
@@ -80,11 +83,14 @@ def return_prowler_provider(
     return prowler_provider
 
 
-def get_prowler_provider_kwargs(provider: Provider) -> dict:
+def get_prowler_provider_kwargs(
+    provider: Provider, mutelist_processor: Processor | None = None
+) -> dict:
     """Get the Prowler provider kwargs based on the given provider type.
 
     Args:
         provider (Provider): The provider object containing the provider type and associated secret.
+        mutelist_processor (Processor): The mutelist processor object containing the mutelist configuration.
 
     Returns:
         dict: The provider kwargs for the corresponding provider class.
@@ -102,16 +108,24 @@ def get_prowler_provider_kwargs(provider: Provider) -> dict:
         }
     elif provider.provider == Provider.ProviderChoices.KUBERNETES.value:
         prowler_provider_kwargs = {**prowler_provider_kwargs, "context": provider.uid}
+
+    if mutelist_processor:
+        mutelist_content = mutelist_processor.configuration.get("Mutelist", {})
+        if mutelist_content:
+            prowler_provider_kwargs["mutelist_content"] = mutelist_content
+
     return prowler_provider_kwargs
 
 
 def initialize_prowler_provider(
     provider: Provider,
+    mutelist_processor: Processor | None = None,
 ) -> AwsProvider | AzureProvider | GcpProvider | KubernetesProvider | M365Provider:
     """Initialize a Prowler provider instance based on the given provider type.
 
     Args:
         provider (Provider): The provider object containing the provider type and associated secrets.
+        mutelist_processor (Processor): The mutelist processor object containing the mutelist configuration.
 
     Returns:
         AwsProvider | AzureProvider | GcpProvider | KubernetesProvider | M365Provider: An instance of the corresponding provider class
@@ -119,7 +133,7 @@ def initialize_prowler_provider(
             provider's secrets.
     """
     prowler_provider = return_prowler_provider(provider)
-    prowler_provider_kwargs = get_prowler_provider_kwargs(provider)
+    prowler_provider_kwargs = get_prowler_provider_kwargs(provider, mutelist_processor)
     return prowler_provider(**prowler_provider_kwargs)
 
 
@@ -184,7 +198,7 @@ def validate_invitation(
         # Admin DB connector is used to bypass RLS protection since the invitation belongs to a tenant the user
         # is not a member of yet
         invitation = Invitation.objects.using(MainRouter.admin_db).get(
-            token=invitation_token, email=email
+            token=invitation_token, email__iexact=email
         )
     except Invitation.DoesNotExist:
         if raise_not_found:
@@ -205,3 +219,33 @@ def validate_invitation(
         )
 
     return invitation
+
+
+# ToRemove after removing the fallback mechanism in /findings/metadata
+def get_findings_metadata_no_aggregations(tenant_id: str, filtered_queryset):
+    filtered_ids = filtered_queryset.order_by().values("id")
+
+    relevant_resources = Resource.all_objects.filter(
+        tenant_id=tenant_id, findings__id__in=Subquery(filtered_ids)
+    ).only("service", "region", "type")
+
+    aggregation = relevant_resources.aggregate(
+        services=ArrayAgg("service", flat=True),
+        regions=ArrayAgg("region", flat=True),
+        resource_types=ArrayAgg("type", flat=True),
+    )
+
+    services = sorted(set(aggregation["services"] or []))
+    regions = sorted({region for region in aggregation["regions"] or [] if region})
+    resource_types = sorted(set(aggregation["resource_types"] or []))
+
+    result = {
+        "services": services,
+        "regions": regions,
+        "resource_types": resource_types,
+    }
+
+    serializer = FindingMetadataSerializer(data=result)
+    serializer.is_valid(raise_exception=True)
+
+    return serializer.data

@@ -1,19 +1,24 @@
 import json
 import uuid
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
 from tasks.jobs.scan import (
     _create_finding_delta,
     _store_resources,
+    _update_resource_failed_findings_count,
+    create_compliance_requirements,
     perform_prowler_scan,
 )
 from tasks.utils import CustomEncoder
 
+from api.exceptions import ProviderConnectionError
 from api.models import (
     Finding,
     Provider,
     Resource,
+    Scan,
     Severity,
     StateChoices,
     StatusChoices,
@@ -155,6 +160,7 @@ class TestPerformScan:
         assert scan_finding.raw_result == finding.raw
         assert scan_finding.muted
         assert scan_finding.compliance == finding.compliance
+        assert scan_finding.muted_reason == "Muted by mutelist"
 
         assert scan_resource.tenant == tenant
         assert scan_resource.uid == finding.resource_uid
@@ -200,11 +206,15 @@ class TestPerformScan:
         provider_id = str(provider.id)
         checks_to_execute = ["check1", "check2"]
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ProviderConnectionError):
             perform_prowler_scan(tenant_id, scan_id, provider_id, checks_to_execute)
 
         scan.refresh_from_db()
         assert scan.state == StateChoices.FAILED
+
+        provider.refresh_from_db()
+        assert provider.connected is False
+        assert isinstance(provider.connection_last_checked_at, datetime)
 
     @pytest.mark.parametrize(
         "last_status, new_status, expected_delta",
@@ -230,7 +240,7 @@ class TestPerformScan:
     ):
         tenant_id = uuid.uuid4()
         provider_instance = MagicMock()
-        provider_instance.id = "provider456"
+        provider_instance.id = "provider123"
 
         finding = MagicMock()
         finding.resource_uid = "resource_uid_123"
@@ -245,15 +255,16 @@ class TestPerformScan:
         resource_instance.region = finding.region
 
         mock_get_or_create_resource.return_value = (resource_instance, True)
+
         tag_instance = MagicMock()
         mock_get_or_create_tag.return_value = (tag_instance, True)
 
         resource, resource_uid_tuple = _store_resources(
-            finding, tenant_id, provider_instance
+            finding, str(tenant_id), provider_instance
         )
 
         mock_get_or_create_resource.assert_called_once_with(
-            tenant_id=tenant_id,
+            tenant_id=str(tenant_id),
             provider=provider_instance,
             uid=finding.resource_uid,
             defaults={
@@ -300,11 +311,11 @@ class TestPerformScan:
         mock_get_or_create_tag.return_value = (tag_instance, True)
 
         resource, resource_uid_tuple = _store_resources(
-            finding, tenant_id, provider_instance
+            finding, str(tenant_id), provider_instance
         )
 
         mock_get_or_create_resource.assert_called_once_with(
-            tenant_id=tenant_id,
+            tenant_id=str(tenant_id),
             provider=provider_instance,
             uid=finding.resource_uid,
             defaults={
@@ -358,14 +369,14 @@ class TestPerformScan:
         ]
 
         resource, resource_uid_tuple = _store_resources(
-            finding, tenant_id, provider_instance
+            finding, str(tenant_id), provider_instance
         )
 
         mock_get_or_create_tag.assert_any_call(
-            tenant_id=tenant_id, key="tag1", value="value1"
+            tenant_id=str(tenant_id), key="tag1", value="value1"
         )
         mock_get_or_create_tag.assert_any_call(
-            tenant_id=tenant_id, key="tag2", value="value2"
+            tenant_id=str(tenant_id), key="tag2", value="value2"
         )
         resource_instance.upsert_or_delete_tags.assert_called_once()
         tags_passed = resource_instance.upsert_or_delete_tags.call_args[1]["tags"]
@@ -377,3 +388,377 @@ class TestPerformScan:
 
 
 # TODO Add tests for aggregations
+
+
+@pytest.mark.django_db
+class TestCreateComplianceRequirements:
+    def test_create_compliance_requirements_success(
+        self,
+        tenants_fixture,
+        scans_fixture,
+        providers_fixture,
+        findings_fixture,
+        resources_fixture,
+    ):
+        with (
+            patch(
+                "tasks.jobs.scan.PROWLER_COMPLIANCE_OVERVIEW_TEMPLATE"
+            ) as mock_compliance_template,
+            patch("tasks.jobs.scan.generate_scan_compliance"),
+        ):
+            tenant_id = str(tenants_fixture[0].id)
+            scan_id = str(scans_fixture[0].id)
+
+            mock_compliance_template.__getitem__.return_value = {
+                "cis_1.4_aws": {
+                    "framework": "CIS AWS Foundations Benchmark",
+                    "version": "1.4.0",
+                    "requirements": {
+                        "1.1": {
+                            "description": "Ensure root access key does not exist",
+                            "checks_status": {
+                                "pass": 0,
+                                "fail": 0,
+                                "manual": 0,
+                                "total": 1,
+                            },
+                            "status": "PASS",
+                        },
+                        "1.2": {
+                            "description": "Ensure MFA is enabled for root account",
+                            "checks_status": {
+                                "pass": 0,
+                                "fail": 1,
+                                "manual": 0,
+                                "total": 1,
+                            },
+                            "status": "FAIL",
+                        },
+                    },
+                },
+            }
+
+            result = create_compliance_requirements(tenant_id, scan_id)
+
+            assert "requirements_created" in result
+            assert "regions_processed" in result
+            assert "compliance_frameworks" in result
+
+    def test_create_compliance_requirements_with_findings(
+        self,
+        tenants_fixture,
+        scans_fixture,
+        providers_fixture,
+        findings_fixture,
+    ):
+        with (
+            patch(
+                "tasks.jobs.scan.PROWLER_COMPLIANCE_OVERVIEW_TEMPLATE"
+            ) as mock_compliance_template,
+            patch("tasks.jobs.scan.generate_scan_compliance"),
+        ):
+            tenant_id = str(tenants_fixture[0].id)
+            scan_id = str(scans_fixture[0].id)
+
+            mock_compliance_template.__getitem__.return_value = {
+                "test_compliance": {
+                    "framework": "Test Framework",
+                    "version": "1.0",
+                    "requirements": {
+                        "req_1": {
+                            "description": "Test Requirement 1",
+                            "checks_status": {
+                                "pass": 2,
+                                "fail": 1,
+                                "manual": 0,
+                                "total": 3,
+                            },
+                            "status": "FAIL",
+                        },
+                    },
+                }
+            }
+
+            result = create_compliance_requirements(tenant_id, scan_id)
+
+            assert "requirements_created" in result
+
+    def test_create_compliance_requirements_kubernetes_provider(
+        self,
+        tenants_fixture,
+        scans_fixture,
+        providers_fixture,
+        findings_fixture,
+    ):
+        with (
+            patch(
+                "tasks.jobs.scan.PROWLER_COMPLIANCE_OVERVIEW_TEMPLATE"
+            ) as mock_compliance_template,
+            patch("tasks.jobs.scan.generate_scan_compliance"),
+        ):
+            tenant = tenants_fixture[0]
+            scan = scans_fixture[0]
+            provider = providers_fixture[0]
+
+            provider.provider = Provider.ProviderChoices.KUBERNETES
+            provider.save()
+            scan.provider = provider
+            scan.save()
+
+            tenant_id = str(tenant.id)
+            scan_id = str(scan.id)
+
+            mock_compliance_template.__getitem__.return_value = {
+                "kubernetes_cis": {
+                    "framework": "CIS Kubernetes Benchmark",
+                    "version": "1.6.0",
+                    "requirements": {
+                        "1.1": {
+                            "description": "Test requirement",
+                            "checks_status": {
+                                "pass": 0,
+                                "fail": 0,
+                                "manual": 0,
+                                "total": 1,
+                            },
+                            "status": "PASS",
+                        },
+                    },
+                },
+            }
+
+            result = create_compliance_requirements(tenant_id, scan_id)
+
+            assert "regions_processed" in result
+
+    def test_create_compliance_requirements_empty_template(
+        self,
+        tenants_fixture,
+        scans_fixture,
+        providers_fixture,
+        findings_fixture,
+    ):
+        with (
+            patch(
+                "tasks.jobs.scan.PROWLER_COMPLIANCE_OVERVIEW_TEMPLATE"
+            ) as mock_compliance_template,
+            patch("tasks.jobs.scan.generate_scan_compliance"),
+        ):
+            tenant_id = str(tenants_fixture[0].id)
+            scan_id = str(scans_fixture[0].id)
+
+            mock_compliance_template.__getitem__.return_value = {}
+
+            result = create_compliance_requirements(tenant_id, scan_id)
+
+            assert result["requirements_created"] == 0
+
+    def test_create_compliance_requirements_error_handling(
+        self,
+        tenants_fixture,
+        scans_fixture,
+        providers_fixture,
+        findings_fixture,
+    ):
+        with patch("tasks.jobs.scan.return_prowler_provider") as mock_prowler_provider:
+            tenant_id = str(tenants_fixture[0].id)
+            scan_id = str(scans_fixture[0].id)
+
+            mock_prowler_provider.side_effect = Exception(
+                "Provider initialization failed"
+            )
+
+            with pytest.raises(Exception, match="Provider initialization failed"):
+                create_compliance_requirements(tenant_id, scan_id)
+
+    def test_create_compliance_requirements_check_status_priority(
+        self, tenants_fixture, scans_fixture, providers_fixture, findings_fixture
+    ):
+        with (
+            patch(
+                "tasks.jobs.scan.PROWLER_COMPLIANCE_OVERVIEW_TEMPLATE"
+            ) as mock_compliance_template,
+            patch(
+                "tasks.jobs.scan.generate_scan_compliance"
+            ) as mock_generate_compliance,
+        ):
+            tenant_id = str(tenants_fixture[0].id)
+            scan_id = str(scans_fixture[0].id)
+
+            mock_compliance_template.__getitem__.return_value = {
+                "cis_1.4_aws": {
+                    "framework": "CIS AWS Foundations Benchmark",
+                    "version": "1.4.0",
+                    "requirements": {
+                        "1.1": {
+                            "description": "Test requirement",
+                            "checks_status": {
+                                "pass": 0,
+                                "fail": 0,
+                                "manual": 0,
+                                "total": 1,
+                            },
+                            "status": "PASS",
+                        },
+                    },
+                },
+            }
+
+            create_compliance_requirements(tenant_id, scan_id)
+
+            assert mock_generate_compliance.call_count == 1
+
+    def test_create_compliance_requirements_multiple_regions(
+        self,
+        tenants_fixture,
+        scans_fixture,
+        providers_fixture,
+        findings_fixture,
+    ):
+        with (
+            patch(
+                "tasks.jobs.scan.PROWLER_COMPLIANCE_OVERVIEW_TEMPLATE"
+            ) as mock_compliance_template,
+            patch("tasks.jobs.scan.generate_scan_compliance"),
+        ):
+            tenant_id = str(tenants_fixture[0].id)
+            scan_id = str(scans_fixture[0].id)
+
+            mock_compliance_template.__getitem__.return_value = {
+                "test_compliance": {
+                    "framework": "Test Framework",
+                    "version": "1.0",
+                    "requirements": {
+                        "req_1": {
+                            "description": "Test Requirement 1",
+                            "checks_status": {
+                                "pass": 2,
+                                "fail": 0,
+                                "manual": 0,
+                                "total": 2,
+                            },
+                            "status": "PASS",
+                        }
+                    },
+                }
+            }
+
+            result = create_compliance_requirements(tenant_id, scan_id)
+
+            assert "requirements_created" in result
+            assert len(result["regions_processed"]) >= 0
+
+    def test_create_compliance_requirements_mixed_status_requirements(
+        self,
+        tenants_fixture,
+        scans_fixture,
+        providers_fixture,
+        findings_fixture,
+    ):
+        with (
+            patch(
+                "tasks.jobs.scan.PROWLER_COMPLIANCE_OVERVIEW_TEMPLATE"
+            ) as mock_compliance_template,
+            patch("tasks.jobs.scan.generate_scan_compliance"),
+        ):
+            tenant_id = str(tenants_fixture[0].id)
+            scan_id = str(scans_fixture[0].id)
+
+            mock_compliance_template.__getitem__.return_value = {
+                "test_compliance": {
+                    "framework": "Test Framework",
+                    "version": "1.0",
+                    "requirements": {
+                        "req_1": {
+                            "description": "Test Requirement 1",
+                            "checks_status": {
+                                "pass": 2,
+                                "fail": 0,
+                                "manual": 0,
+                                "total": 2,
+                            },
+                            "status": "PASS",
+                        },
+                        "req_2": {
+                            "description": "Test Requirement 2",
+                            "checks_status": {
+                                "pass": 1,
+                                "fail": 1,
+                                "manual": 0,
+                                "total": 2,
+                            },
+                            "status": "FAIL",
+                        },
+                    },
+                }
+            }
+
+            result = create_compliance_requirements(tenant_id, scan_id)
+
+            assert "requirements_created" in result
+            assert result["requirements_created"] >= 0
+
+
+@pytest.mark.django_db
+class TestUpdateResourceFailedFindingsCount:
+    def test_execute_sql_update(
+        self, tenants_fixture, scans_fixture, providers_fixture, resources_fixture
+    ):
+        resource = resources_fixture[0]
+        tenant_id = resource.tenant_id
+        scan_id = resource.provider.scans.first().id
+
+        # Common kwargs for all failing findings
+        base_kwargs = {
+            "tenant_id": tenant_id,
+            "scan_id": scan_id,
+            "delta": None,
+            "status": StatusChoices.FAIL,
+            "status_extended": "test status extended",
+            "impact": Severity.critical,
+            "impact_extended": "test impact extended",
+            "severity": Severity.critical,
+            "raw_result": {
+                "status": StatusChoices.FAIL,
+                "impact": Severity.critical,
+                "severity": Severity.critical,
+            },
+            "tags": {"test": "dev-qa"},
+            "check_id": "test_check_id",
+            "check_metadata": {
+                "CheckId": "test_check_id",
+                "Description": "test description apple sauce",
+                "servicename": "ec2",
+            },
+            "first_seen_at": "2024-01-02T00:00:00Z",
+        }
+
+        # UIDs to create (two with same UID, one unique)
+        uids = ["test_finding_uid_1", "test_finding_uid_1", "test_finding_uid_2"]
+
+        # Create findings and associate with the resource
+        for uid in uids:
+            finding = Finding.objects.create(uid=uid, **base_kwargs)
+            finding.add_resources([resource])
+
+        resource.refresh_from_db()
+        assert resource.failed_findings_count == 0
+
+        _update_resource_failed_findings_count(tenant_id=tenant_id, scan_id=scan_id)
+        resource.refresh_from_db()
+
+        # Only two since two findings share the same UID
+        assert resource.failed_findings_count == 2
+
+    @patch("tasks.jobs.scan.Scan.objects.get")
+    def test_scan_not_found(
+        self,
+        mock_scan_get,
+    ):
+        mock_scan_get.side_effect = Scan.DoesNotExist
+
+        with pytest.raises(Scan.DoesNotExist):
+            _update_resource_failed_findings_count(
+                "8614ca97-8370-4183-a7f7-e96a6c7d2c93",
+                "4705bed5-8782-4e8b-bab6-55e8043edaa6",
+            )
