@@ -19,7 +19,7 @@ import {
   ProviderType,
 } from "@/types";
 
-import { ProviderTitleDocs } from "../provider-title-docs";
+//import { ProviderTitleDocs } from "../provider-title-docs";
 import { AWSStaticCredentialsForm } from "./select-credentials-type/aws/credentials-type";
 import { AWSRoleCredentialsForm } from "./select-credentials-type/aws/credentials-type/aws-role-credentials-form";
 import { GCPDefaultCredentialsForm } from "./select-credentials-type/gcp/credentials-type";
@@ -76,7 +76,7 @@ export const BaseCredentialsForm = ({
           value={providerType}
         />
 
-        <ProviderTitleDocs providerType={providerType} />
+        {/*<ProviderTitleDocs providerType={providerType} />*/}
 
         <Divider />
 

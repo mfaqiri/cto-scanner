@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 
 import { CustomButton } from "@/components/ui/custom";
 import { getAWSCredentialsTemplateLinks } from "@/lib";
-
 export const CredentialsRoleHelper = () => {
   const { data: session } = useSession();
 
@@ -38,25 +37,25 @@ export const CredentialsRoleHelper = () => {
         </p>
 
         <div className="flex w-fit flex-col gap-2">
-          <Link
-            href="https://github.com/ascending-llc/Operation/blob/master/cross-account-template/askcto-scanner-role.yml"
+          {/*
+          <CustomButton
+            ariaLabel="Use the following AWS CloudFormation Quick Link to deploy the IAM Role"
+            color="transparent"
+            className="h-auto w-fit min-w-0 p-0 text-blue-500"
+            asLink={getAWSCredentialsTemplateLinks().cloudformation}
             target="_blank"
           >
             CloudFormation Template
-          </Link>
-          {/* <Link
-            href="https://github.com/prowler-cloud/prowler/blob/master/permissions/templates/terraform/main.tf"
           </CustomButton>
           <CustomButton
             ariaLabel="Terraform Code"
             color="transparent"
             className="h-auto w-fit min-w-0 p-0 text-blue-500"
             asLink={getAWSCredentialsTemplateLinks().terraform}
->>>>>>> prowler/master
             target="_blank"
           >
             Terraform Code
-<<<<<<< HEAD
+          </CustomButton>
           </Link> */}
         </div>
 

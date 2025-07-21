@@ -9,9 +9,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { authenticate, createNewUser } from "@/actions/auth";
-import { CTOIconExtended, NotificationIcon } from "@/components/icons";
 import { initiateSamlAuth } from "@/actions/integrations/saml";
 import { PasswordRequirementsMessage } from "@/components/auth/oss/password-validator";
+import { CTOIconExtended, NotificationIcon } from "@/components/icons";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { useToast } from "@/components/ui";
 import { CustomButton, CustomInput } from "@/components/ui/custom";
