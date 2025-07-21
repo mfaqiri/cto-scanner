@@ -15,15 +15,15 @@ export const CredentialsRoleHelper = () => {
           A <strong>new read-only IAM role</strong> must be manually created.
         </p>
 
-        <CustomButton
+       {/* <CustomButton
           ariaLabel="Use the following AWS CloudFormation Quick Link to deploy the IAM Role"
           color="transparent"
           className="h-auto w-fit min-w-0 p-0 text-blue-500"
           asLink={`${getAWSCredentialsTemplateLinks().cloudformationQuickLink}${session?.tenantId}`}
           target="_blank"
-        >
+        >*
           Use the following AWS CloudFormation Quick Link to deploy the IAM Role
-        </CustomButton>
+        </CustomButton>*/}
 
         <div className="flex items-center gap-2">
           <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
@@ -37,9 +37,8 @@ export const CredentialsRoleHelper = () => {
         </p>
 
         <div className="flex w-fit flex-col gap-2">
-          {/*
           <CustomButton
-            ariaLabel="Use the following AWS CloudFormation Quick Link to deploy the IAM Role"
+            ariaLabel="CloudFormation Template"
             color="transparent"
             className="h-auto w-fit min-w-0 p-0 text-blue-500"
             asLink={getAWSCredentialsTemplateLinks().cloudformation}
@@ -47,6 +46,7 @@ export const CredentialsRoleHelper = () => {
           >
             CloudFormation Template
           </CustomButton>
+          {/*
           <CustomButton
             ariaLabel="Terraform Code"
             color="transparent"
