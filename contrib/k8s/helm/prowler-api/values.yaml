@@ -22,7 +22,7 @@ ProwlerApi:
   enabled: true
   image:
     repository: prowlercloud/prowler-api
-    tag: stable
+    tag: 5.7.5
     pullPolicy: IfNotPresent
   ports:
     - name: http
