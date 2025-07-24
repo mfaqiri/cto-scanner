@@ -139,7 +139,7 @@ worker:
   replicaCount: 1
   image:
     repository: prowlercloud/prowler-api
-    tag: stable
+    tag: 5.7.5
     pullPolicy: IfNotPresent
   command: ["/home/prowler/docker-entrypoint.sh", "worker"]
   ports:
@@ -158,7 +158,7 @@ workerBeat:
   replicaCount: 1
   image:
     repository: prowlercloud/prowler-api
-    tag: stable
+    tag: 5.7.5
     pullPolicy: IfNotPresent
   command: ["../docker-entrypoint.sh", "beat"]
   ports:
