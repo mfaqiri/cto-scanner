@@ -114,6 +114,30 @@ env:
     - AUTH_SECRET
     - NEXT_PUBLIC_IS_CLOUD_ENV
 
+postgresql:
+  auth:
+    existingSecret: prowler-api-env
+  primary:
+    persistence:
+      enabled: true
+      storageClass: ebs-sc-prowler
+      size: 50Gi
+
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "150m"
+      limits:
+        memory: "2Gi"
+        cpu: "150m"
+
+  # Memory-optimized settings
+  postgresqlConfiguration:
+    shared_buffers: "512MB"
+    effective_cache_size: "1536MB"
+    work_mem: "4MB"
+    maintenance_work_mem: "64MB"
+    max_connections: "100"
 
 # Valkey configuration
 valkey:
