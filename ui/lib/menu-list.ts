@@ -170,7 +170,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
             {
               href:
                 process.env.NEXT_PUBLIC_IS_CLOUD_ENV === "true"
-                  ? "https://comp.ascendingdc.com/api/v1/docs"
+                  ? ""
                   : `${process.env.NEXT_PUBLIC_API_DOCS_URL}`,
               target: "_blank",
               label: "API reference",
