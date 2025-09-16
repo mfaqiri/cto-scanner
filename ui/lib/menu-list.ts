@@ -20,11 +20,9 @@ import {
 } from "lucide-react";
 
 import {
-  APIdocIcon,
   AWSIcon,
   AzureIcon,
   CircleHelpIcon,
-  DocIcon,
   GCPIcon,
   M365Icon,
   SupportIcon,
@@ -161,21 +159,6 @@ export const getMenuList = (pathname: string): GroupProps[] => {
           label: "Support & Help",
           icon: SupportIcon,
           submenus: [
-           /* {
-              href: "",
-              target: "_blank",
-              label: "Documentation",
-              icon: DocIcon,
-            },
-            {
-              href:
-                process.env.NEXT_PUBLIC_IS_CLOUD_ENV === "true"
-                  ? ""
-                  : `${process.env.NEXT_PUBLIC_API_DOCS_URL}`,
-              target: "_blank",
-              label: "API reference",
-              icon: APIdocIcon,
-            },*/
             {
               href: "https://ascendingdc.com/about/contact-us?m=Inquiry:%20CTO-Scanner%20Support&p=/cto-scanner",
               target: "_blank",

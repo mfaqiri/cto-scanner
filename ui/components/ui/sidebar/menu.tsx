@@ -1,12 +1,11 @@
 "use client";
 
-import { Divider } from "@nextui-org/react";
 import { Ellipsis, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { logOut } from "@/actions/auth";
-import { AddIcon, InfoIcon } from "@/components/icons";
+import { AddIcon } from "@/components/icons";
 import { CollapseMenuButton } from "@/components/ui/sidebar/collapse-menu-button";
 import {
   Tooltip,
