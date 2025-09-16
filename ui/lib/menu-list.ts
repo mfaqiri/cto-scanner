@@ -162,7 +162,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
           icon: SupportIcon,
           submenus: [
             {
-              href: "https://comp.ascendingdc.com/api/v1/docs",
+              href: "",
               target: "_blank",
               label: "Documentation",
               icon: DocIcon,

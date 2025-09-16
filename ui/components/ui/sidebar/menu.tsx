@@ -174,7 +174,7 @@ export const Menu = ({ isOpen }: { isOpen: boolean }) => {
           <>
             <Divider orientation="vertical" />
             <Link
-              href="https://comp.ascendingdc.com/api/v1/docs"
+              href=""
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1"
