@@ -161,7 +161,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
           label: "Support & Help",
           icon: SupportIcon,
           submenus: [
-            {
+           /* {
               href: "",
               target: "_blank",
               label: "Documentation",
@@ -175,7 +175,7 @@ export const getMenuList = (pathname: string): GroupProps[] => {
               target: "_blank",
               label: "API reference",
               icon: APIdocIcon,
-            },
+            },*/
             {
               href: "https://ascendingdc.com/about/contact-us?m=Inquiry:%20CTO-Scanner%20Support&p=/cto-scanner",
               target: "_blank",

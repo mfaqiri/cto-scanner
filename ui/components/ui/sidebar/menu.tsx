@@ -170,7 +170,7 @@ export const Menu = ({ isOpen }: { isOpen: boolean }) => {
 
       <div className="text-muted-foreground border-border mt-2 flex items-center justify-center gap-2 border-t pt-2 text-center text-xs">
         <span>{process.env.NEXT_PUBLIC_PROWLER_RELEASE_VERSION}</span>
-        {process.env.NEXT_PUBLIC_IS_CLOUD_ENV === "true" && (
+        {/*process.env.NEXT_PUBLIC_IS_CLOUD_ENV === "true" && (
           <>
             <Divider orientation="vertical" />
             <Link
@@ -185,7 +185,7 @@ export const Menu = ({ isOpen }: { isOpen: boolean }) => {
               </span>
             </Link>
           </>
-        )}
+        )*/}
       </div>
     </>
   );
